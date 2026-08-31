@@ -312,10 +312,6 @@ async function main() {
         compiledContract: compiledContract as any,
         args: [],
         privateStateId: PRIVATE_STATE_ID,
-        initialPrivateState: {
-          documentContent: new Uint8Array(256).fill(0),
-          ownerPrivateKey: new Uint8Array(32).fill(0),
-        },
       });
       break;
     } catch (err: any) {
@@ -377,6 +373,12 @@ async function main() {
   const contractAddress = deployed.deployTxData.public.contractAddress;
   console.log('  ✅ Contract deployed successfully!\n');
   console.log(`  Contract Address: ${contractAddress}\n`);
+
+  providers.privateStateProvider.setContractAddress(contractAddress);
+  await providers.privateStateProvider.set(PRIVATE_STATE_ID, {
+    documentContent: new Uint8Array(256).fill(0),
+    ownerPrivateKey: new Uint8Array(32).fill(0),
+  });
 
   recordDeployment(network, contractAddress, address.toString());
   console.log('  Saved to .midnight-state.json\n');
