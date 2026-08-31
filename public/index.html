@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocStore — Privacy Document Storage on Midnight Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: #0e131f;
+      --bg-card-hover: #141c2e;
+      --bg-input: #121826;
+      --border: #1e293b;
+      --border-accent: #334155;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.2);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .logo-text h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      display: inline-block;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    select, input, textarea, button {
+      font-family: inherit;
+    }
+
+    .select-network {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.55rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .select-network:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #4338ca);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4f46e5, #3730a3);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.7rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+    }
+
+    /* Wallet Bar */
+    .wallet-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .wallet-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--accent), transparent);
+    }
+
+    .wallet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+    }
+
+    .status-dot.connected {
+      background: var(--success);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    }
+
+    .wallet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .wallet-stat {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .stat-val.balance {
+      font-size: 1.15rem;
+      color: var(--accent);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-main);
+      background: var(--border);
+    }
+
+    /* Contract banner */
+    .contract-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(14, 19, 31, 0.7);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .contract-bar label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .contract-bar input {
+      flex: 1;
+      min-width: 260px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .contract-bar input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.75rem 1.1rem;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab-btn.active {
+      color: #818cf8;
+      border-bottom-color: var(--primary);
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Form controls */
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-main);
+      padding: 0.6rem 0.85rem;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    .form-textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .privacy-box {
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 10px;
+      padding: 1rem;
+      margin: 1.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .privacy-box h4 {
+      color: #818cf8;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .privacy-box p {
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    /* Tables / Documents Explorer */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .doc-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .doc-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .doc-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    /* Diagnostics grid */
+    .diag-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .diag-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .diag-card h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--primary);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      z-index: 1000;
+      max-width: 380px;
+      display: none;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-area">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>DocStore <span class="logo-badge">Midnight ZK</span></h1>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <select id="networkSelect" class="select-network">
+          <option value="undeployed">Local Devnet (Docker)</option>
+          <option value="preview">Midnight Preview Testnet</option>
+          <option value="preprod">Midnight Preprod Testnet</option>
+        </select>
+
+        <button id="btnConnect1AM" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path>
+            <path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path>
+            <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path>
+          </svg>
+          <span id="connectBtnText">Connect 1AM Wallet</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Wallet Bar -->
+    <section class="wallet-card" id="walletSection">
+      <div class="wallet-header">
+        <div class="wallet-status">
+          <div class="status-dot" id="walletStatusDot"></div>
+          <span id="walletStatusLabel">1AM Wallet Disconnected</span>
+        </div>
+        <div id="walletActions" style="display: none;">
+          <button id="btnRefreshBalance" class="btn btn-secondary btn-sm">🔄 Refresh Balances</button>
+          <button id="btnDisconnectWallet" class="btn btn-secondary btn-sm" style="color: var(--danger);">Disconnect</button>
+        </div>
+      </div>
+
+      <div class="wallet-grid">
+        <div class="wallet-stat">
+          <div class="stat-label">
+            <span>tNIGHT Balance</span>
+            <span class="logo-badge">Unshielded</span>
+          </div>
+          <div class="stat-val balance" id="valNightBalance">0.000000</div>
+        </div>
+
+        <div class="wallet-stat">
+          <div class="stat-label">
+            <span>tDUST Balance / Capacity</span>
+            <span class="logo-badge">Fee Gas</span>
+          </div>
+          <div class="stat-val balance" id="valDustBalance">0 / 0</div>
+        </div>
+
+        <div class="wallet-stat">
+          <div class="stat-label">
+            <span>Shielded Address</span>
+            <button class="copy-btn" onclick="copyText('valShieldedAddress')">Copy</button>
+          </div>
+          <div class="stat-val" id="valShieldedAddress">Not connected</div>
+        </div>
+
+        <div class="wallet-stat">
+          <div class="stat-label">
+            <span>Unshielded Address</span>
+            <button class="copy-btn" onclick="copyText('valUnshieldedAddress')">Copy</button>
+          </div>
+          <div class="stat-val" id="valUnshieldedAddress">Not connected</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contract Bar -->
+    <div class="contract-bar">
+      <label>DocStore Contract Address:</label>
+      <input type="text" id="inputContractAddress" placeholder="Paste deployed Midnight contract address (hex/bech32)">
+      <button id="btnSaveContractAddress" class="btn btn-secondary btn-sm">Save</button>
+      <button id="btnDeployNewContract" class="btn btn-primary btn-sm">🚀 Deploy Contract</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="tabStore">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Store Document (ZK)
+      </button>
+      <button class="tab-btn" data-tab="tabProve">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Prove Knowledge
+      </button>
+      <button class="tab-btn" data-tab="tabGrants">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        Grants & Refusal
+      </button>
+      <button class="tab-btn" data-tab="tabExplorer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Documents Explorer
+      </button>
+      <button class="tab-btn" data-tab="tabDocker">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Docker & Devnet
+      </button>
+    </nav>
+
+    <!-- Tab 1: Store Document -->
+    <div id="tabStore" class="tab-content active">
+      <div class="card">
+        <h2 class="card-title">Store Document with Zero-Knowledge Proof</h2>
+        <p class="card-desc">Your document content is proven cryptographically via a private witness. The document content <strong>never leaves your browser</strong>; only its SHA-256 hash and metadata are recorded on Midnight.</p>
+
+        <form id="formStoreDocument">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Document Title</label>
+              <input type="text" id="docTitle" class="form-input" placeholder="e.g. Confidential Project Architecture Whitepaper" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="docCategory" class="form-select">
+                <option value="Confidential">Confidential</option>
+                <option value="Finance">Finance</option>
+                <option value="Legal">Legal</option>
+                <option value="Medical">Medical</option>
+                <option value="Technical">Technical</option>
+                <option value="Identity">Identity</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label class="form-label" style="margin-bottom: 0;">Document Content (Max 256 bytes)</label>
+              <span id="contentByteCounter" style="font-size: 0.75rem; color: var(--text-muted);">0 / 256 bytes</span>
+            </div>
+            <textarea id="docContent" class="form-textarea" placeholder="Type document text or paste content to prove knowledge of..."></textarea>
+          </div>
+
+          <div class="privacy-box">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Zero-Knowledge Privacy Proof
+            </h4>
+            <p><strong>Private Witness:</strong> Document content & signing key are kept securely in memory.</p>
+            <p><strong>Public On-Chain:</strong> Document ID: <code id="previewDocId" class="mono" style="color: var(--accent);">0000000000000000000000000000000000000000000000000000000000000000</code></p>
+          </div>
+
+          <button type="submit" id="btnSubmitStore" class="btn btn-primary" style="width: 100%;">
+            🔒 Store Document On-Chain (ZK Witness)
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab 2: Prove Knowledge -->
+    <div id="tabProve" class="tab-content">
+      <div class="card">
+        <h2 class="card-title">Prove Knowledge of Document Content</h2>
+        <p class="card-desc">Execute the <code>proveKnowledge</code> ZK circuit. Proves to the network that you own the document and possess the exact plaintext content matching the on-chain Document ID without disclosing the plaintext.</p>
+
+        <form id="formProveKnowledge">
+          <div class="form-group">
+            <label class="form-label">Target Document ID (64 hex chars)</label>
+            <input type="text" id="proveDocId" class="form-input mono" placeholder="e.g. 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Secret Document Content</label>
+            <textarea id="proveContent" class="form-textarea" placeholder="Enter matching document content to prove knowledge..." required></textarea>
+          </div>
+
+          <button type="submit" id="btnSubmitProve" class="btn btn-primary" style="width: 100%;">
+            ⚡ Generate & Submit ZK Proof
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab 3: Grants & Refusal -->
+    <div id="tabGrants" class="tab-content">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="card">
+          <h2 class="card-title">Check Access Grant</h2>
+          <p class="card-desc">Query public on-chain ledger to verify if an address holds an active grant for a document.</p>
+          <form id="formCheckGrant">
+            <div class="form-group">
+              <label class="form-label">Document ID</label>
+              <input type="text" id="grantDocId" class="form-input mono" placeholder="Document ID" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Grantee Public Key</label>
+              <input type="text" id="grantGrantee" class="form-input mono" placeholder="Grantee 32-byte public key" required>
+            </div>
+            <button type="submit" class="btn btn-secondary" style="width: 100%;">🔍 Check Grant Status</button>
+          </form>
+          <div id="grantResult" style="margin-top: 1rem; display: none;" class="diag-card"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Record Corruption Refusal Alarm</h2>
+          <p class="card-desc">Publish a cryptographic alarm proving you are the document owner and refusing corrupted access.</p>
+          <form id="formRefuseCorruption">
+            <div class="form-group">
+              <label class="form-label">Document ID</label>
+              <input type="text" id="refuseDocId" class="form-input mono" placeholder="Document ID" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Claimed Owner Public Key</label>
+              <input type="text" id="refuseOwner" class="form-input mono" placeholder="Owner public key" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; background: var(--danger);">🚨 Record Refusal Alarm</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Documents Explorer -->
+    <div id="tabExplorer" class="tab-content">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h2 class="card-title">On-Chain Document Ledger</h2>
+            <p class="card-desc" style="margin-bottom: 0;">Public document records indexed directly from the Midnight GraphQL Indexer.</p>
+          </div>
+          <button id="btnRefreshDocs" class="btn btn-secondary btn-sm">🔄 Refresh List</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Document Title</th>
+                <th>Category</th>
+                <th>Document ID</th>
+                <th>Owner Address</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="docsTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                  No documents found or connecting to Indexer...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: Docker & Devnet -->
+    <div id="tabDocker" class="tab-content">
+      <div class="card">
+        <h2 class="card-title">Docker Desktop Devnet Services</h2>
+        <p class="card-desc">Status of local Midnight containers running via Docker Desktop.</p>
+
+        <div class="diag-grid">
+          <div class="diag-card">
+            <h3>
+              <span>Midnight Node</span>
+              <span class="status-dot" id="diagNodeDot"></span>
+            </h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Port 9944 (Substrate RPC / WS)</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem;" id="diagNodeStatus">Checking...</p>
+          </div>
+
+          <div class="diag-card">
+            <h3>
+              <span>Midnight Indexer</span>
+              <span class="status-dot" id="diagIndexerDot"></span>
+            </h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Port 8088 (GraphQL API v4)</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem;" id="diagIndexerStatus">Checking...</p>
+          </div>
+
+          <div class="diag-card">
+            <h3>
+              <span>Proof Server</span>
+              <span class="status-dot" id="diagProofDot"></span>
+            </h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Port 6300 (ZK Prover 8.1.0)</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem;" id="diagProofStatus">Checking...</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-input); border-radius: 10px; border: 1px solid var(--border);">
+          <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">💡 Useful Midnight Devnet Commands:</h4>
+          <pre class="mono" style="font-size: 0.8rem; color: var(--accent); overflow-x: auto;">
+# Check balance in terminal:
+npm run check-balance
+
+# Interactive CLI:
+npm run cli
+
+# Restart Docker containers:
+docker compose up -d
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">
+    <div id="toastMessage" style="font-size: 0.875rem; font-weight: 500;"></div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

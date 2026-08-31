@@ -1,0 +1,187 @@
+// DocStore — Documentation Storage System on Midnight Network
+//
+// PRIVACY DESIGN
+// --------------
+// PUBLIC (on-chain, visible to all observers):
+//   - documents:  Map<documentIdHash, Document> — metadata record:
+//       documentId (SHA-256 of content), owner public key, title, category,
+//       createdAt, updatedAt
+//   - payload:    Map<documentIdHash, PayloadEnvelope> — encrypted-payload
+//                 reference, payload key id, cipher name, version
+//   - grants:     Map<compositeGrantKey, Uint<64>> — access grants
+//   - onChainCounter — total number of documents stored
+//
+// PRIVATE (witness inputs, proven with ZK, NEVER revealed on-chain):
+//   - documentContent: the full document bytes (only its SHA-256 hash leaks)
+//   - ownerPrivateKey: the owner's signing key (never leaves the wallet)
+//
+// DISCLOSED (intentionally revealed via explicit disclose() wrappers only):
+//   - the content hash (documentId), owner public key, title, category,
+//     timestamp, encrypted payload reference, cipher name, key id
+//
+// WHAT AN ON-CHAIN OBSERVER SEES:
+//   - That a document exists, its hash, owner, title/category, timestamps,
+//     and that someone proved knowledge of it.
+//   - No document content, no plaintext, no private keys, ever.
+
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+export struct Document {
+  documentId: Bytes<32>,
+  owner: Bytes<32>,
+  title: Opaque<"string">,
+  category: Opaque<"string">,
+  createdAt: Uint<64>,
+  updatedAt: Uint<64>,
+}
+
+export struct PayloadEnvelope {
+  encryptedRef: Bytes<32>,
+  payloadKeyId: Bytes<32>,
+  cipher: Opaque<"string">,
+  version: Uint<16>,
+}
+
+export ledger documents: Map<Bytes<32>, Document>;
+export ledger payload: Map<Bytes<32>, PayloadEnvelope>;
+export ledger grants: Map<Bytes<32>, Uint<64>>;
+export ledger onChainCounter: Counter;
+
+// witness — reads PRIVATE document content + private key from the wallet
+witness documentContent(): Bytes<256>;
+witness ownerPrivateKey(): Bytes<32>;
+
+// Circuit 1: store a new document
+// Proves knowledge of the document content (witness) without revealing it.
+// Only sha256(content) — the documentId — is disclosed, along with the
+// public metadata (title, category, timestamp) and the encrypted payload ref.
+export circuit storeDocument(
+    title: Opaque<"string">,
+    category: Opaque<"string">,
+    timestamp: Uint<64>,
+    encryptedRef: Bytes<32>,
+    payloadKeyId: Bytes<32>,
+    cipher: Opaque<"string">,
+): Bytes<32> {
+  return storeDocumentWithContent(
+      title,
+      category,
+      timestamp,
+      encryptedRef,
+      payloadKeyId,
+      cipher,
+      documentContent(),
+      ownerPrivateKey(),
+  );
+}
+
+// internal version that receives the witness values so tests can call logic
+export circuit storeDocumentWithContent(
+    title: Opaque<"string">,
+    category: Opaque<"string">,
+    timestamp: Uint<64>,
+    encryptedRef: Bytes<32>,
+    payloadKeyId: Bytes<32>,
+    cipher: Opaque<"string">,
+    content: Bytes<256>,
+    secret: Bytes<32>,
+): Bytes<32> {
+  const documentId = disclose(persistentHash<Vector<1, Bytes<256>>>([content]));
+  const owner = disclose(publicKey(secret));
+
+  assert(!documents.member(documentId), "Document already exists");
+
+  documents.insert(disclose(documentId), Document {
+    documentId: disclose(documentId),
+    owner: disclose(owner),
+    title: disclose(title),
+    category: disclose(category),
+    createdAt: disclose(timestamp),
+    updatedAt: disclose(timestamp),
+  });
+  payload.insert(disclose(documentId), PayloadEnvelope {
+    encryptedRef: disclose(encryptedRef),
+    payloadKeyId: disclose(payloadKeyId),
+    cipher: disclose(cipher),
+    version: 1,
+  });
+  onChainCounter.increment(1);
+
+  return disclose(documentId);
+}
+
+// Circuit 2: prove knowledge of a document without revealing its content
+export circuit proveKnowledge(documentId: Bytes<32>): [] {
+  const id = disclose(documentId);
+  const computed = persistentHash<Vector<1, Bytes<256>>>([documentContent()]);
+  assert(computed == id, "Content does not match");
+
+  const caller = publicKey(ownerPrivateKey());
+  assert(documents.member(id), "Document not found");
+  assert(documents.lookup(id).owner == caller, "Not the document owner");
+
+  disclose(id);
+  disclose(caller);
+  return [];
+}
+
+// Circuit 3: derive the owner public key from the secret (identity proof)
+export circuit publicKey(secret: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([
+    pad(32, "midnight:docstore:pk:"),
+    secret
+  ]);
+}
+
+// deterministic composite key for access-grant lookups
+export circuit grantKey(documentId: Bytes<32>, grantee: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([documentId, grantee]);
+}
+
+// Circuit 4: check whether a keyed entry (doc+grantee) has a live grant.
+// Public inputs only; returns the public grant timestamp (0 = none/refused).
+export circuit checkGrant(
+    documentId: Bytes<32>,
+    grantee: Bytes<32>,
+): Uint<64> {
+  const id = disclose(documentId);
+  const g = disclose(grantee);
+  const granted = computeGrant(id, g);
+  disclose(id);
+  disclose(g);
+  return disclose(granted);
+}
+
+// Circuit 5: record a refusal/corruption alarm on a grant.
+// PROVES (without revealing the private key) that the caller is the
+// document owner, then publishes a refusal record — deliberately.
+export circuit refuseCorruption(
+    documentId: Bytes<32>,
+    claimedOwner: Bytes<32>,
+    timestamp: Uint<64>,
+): [] {
+  const caller = publicKey(ownerPrivateKey());
+  const id = disclose(documentId);
+  const owner = disclose(claimedOwner);
+  assert(caller == owner, "Not the claimed owner");
+  assert(!documents.member(id), "Document not found");
+
+  grants.insert(grantKey(id, owner), 0);
+
+  disclose(id);
+  disclose(owner);
+  disclose(timestamp);
+  return [];
+}
+
+export circuit computeHash(content: Bytes<256>): Bytes<32> {
+  return persistentHash<Vector<1, Bytes<256>>>([content]);
+}
+
+export circuit computeGrant(documentId: Bytes<32>, grantee: Bytes<32>): Uint<64> {
+  const key = grantKey(disclose(documentId), disclose(grantee));
+  const result = grants.member(key) ? grants.lookup(key) : 0;
+  return result;
+}

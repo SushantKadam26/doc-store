@@ -1,0 +1,54 @@
+{
+  "name": "doc-store",
+  "version": "1.0.0",
+  "description": "Documentation storage system on Midnight Network \u2014 stores document metadata on-chain while the document content itself never leaves the wallet (proven with ZK circuits).",
+  "type": "module",
+  "scripts": {
+    "compile": "compact compile +0.31.1 contracts/DocStore.compact contracts/managed/DocStore",
+    "setup": "tsx src/setup.ts",
+    "deploy": "tsx src/deploy.ts",
+    "network": "tsx src/network.ts",
+    "check-balance": "tsx src/check-balance.ts",
+    "cli": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "proof-server:start": "docker compose up -d proof-server",
+    "proof-server:stop": "docker compose stop proof-server",
+    "clean": "rm -rf contracts/managed .midnight-state.json .midnight-wallet-state midnight-level-db",
+    "dev": "vite dev --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.16.0",
+    "@midnight-ntwrk/dapp-connector-api": "^4.0.1",
+    "@midnight-ntwrk/midnight-js-contracts": "4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-network-id": "4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "4.1.1",
+    "@midnight-ntwrk/midnight-js-protocol": "4.1.1",
+    "@midnight-ntwrk/midnight-js-types": "4.1.1",
+    "@midnight-ntwrk/midnight-js-utils": "4.1.1",
+    "@midnight-ntwrk/wallet-sdk": "1.2.0",
+    "@scure/bip39": "2.2.0",
+    "rxjs": "^7.8.2",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5.7.0",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [
+    "midnight",
+    "blockchain",
+    "zero-knowledge",
+    "privacy",
+    "documents"
+  ]
+}
