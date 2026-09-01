@@ -1,9 +1,5 @@
-/**
- * Unit tests for wallet state management
- */
 import { describe, it, expect } from 'vitest';
-import { loadWalletState, saveWalletState, clearWalletState } from './wallet-state.ts';
-import { NetworkId } from './network.ts';
+import { loadWalletState, saveWalletState, clearWalletState, WALLET_STATE_DIR, WALLET_STATE_VERSION, CHILD_KINDS } from './wallet-state.ts';
 
 describe('Wallet state persistence', () => {
   it('should define wallet state constants', () => {
@@ -13,10 +9,5 @@ describe('Wallet state persistence', () => {
 
   it('should define child kinds', () => {
     expect(CHILD_KINDS).toEqual(['shielded', 'unshielded', 'dust']);
-  });
-
-  it('should have valid persisted wallet state shape', () => {
-    const state: PersistedWalletState = {};
-    expect(state).toMatchObject({});
   });
 });

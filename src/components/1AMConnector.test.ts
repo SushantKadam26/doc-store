@@ -1,8 +1,5 @@
-/**
- * Unit tests for 1AM Wallet connector
- */
 import { describe, it, expect } from 'vitest';
-import { resolveNetwork } from '../network.ts';
+import { resolveNetwork, isNetworkId, parseNetworkFlag } from '../network.ts';
 
 describe('1AM Connector', () => {
   it('should resolve network identifiers', () => {

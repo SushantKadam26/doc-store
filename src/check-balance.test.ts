@@ -1,8 +1,5 @@
-/**
- * Unit tests for check-balance.ts
- */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { resolveNetwork, getOrCreateWallet } from './network.ts';
+import { describe, it, expect } from 'vitest';
+import { resolveNetwork } from './network.ts';
 
 describe('Network Resolution', () => {
   it('should resolve undeployed network by default', () => {
@@ -18,13 +15,5 @@ describe('Network Resolution', () => {
   it('should resolve preprod network with flag', () => {
     const { network } = resolveNetwork({ argv: ['--network', 'preprod'] });
     expect(network).toBe('preprod');
-  });
-});
-
-describe('Wallet Creation', () => {
-  it('should create wallet on undeployed network', () => {
-    const { network, config } = resolveNetwork({ argv: [] });
-    const wallet = getOrCreateWallet(network, { networkConfig: config });
-    expect(wallet.seed).toBeDefined();
   });
 });

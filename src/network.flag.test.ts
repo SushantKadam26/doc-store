@@ -1,6 +1,3 @@
-/**
- * Unit tests for network flag resolution
- */
 import { describe, it, expect } from 'vitest';
 import { resolveNetwork, parseNetworkFlag, isNetworkId } from './network.ts';
 

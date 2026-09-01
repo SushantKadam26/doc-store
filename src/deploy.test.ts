@@ -1,7 +1,4 @@
-/**
- * Unit tests for deploy.ts
- */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { resolveNetwork, getOrCreateWallet } from './network.ts';
 
 describe('Deploy preparation', () => {

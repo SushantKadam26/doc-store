@@ -1,6 +1,3 @@
-/**
- * Unit tests for contract provider service
- */
 import { describe, it, expect } from 'vitest';
 import { resolveNetwork } from '../network.ts';
 
