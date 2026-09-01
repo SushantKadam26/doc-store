@@ -36,6 +36,33 @@ flowchart TD
 
 ---
 
+## 🛡️ Privacy Model
+
+**What an on-chain observer can see:**
+- That a document was stored, its SHA-256 hash (`documentId`)
+- Owner's public key (derived from the private key witness, but not the raw key)
+- Title, category, creation/update timestamps
+- Encrypted payload reference, cipher name, key ID version
+- That someone proved knowledge of the document content
+- Grants given to specific grantees (composite grant keys)
+- Total document count on-chain
+
+**What an on-chain observer CANNOT see:**
+- The actual document content (never leaves the wallet)
+- The owner's private signing key
+- The plaintext of any encrypted payloads
+- The wallet's seed phrase or recovery phrase
+- Any unshielded balance details beyond what's publicly visible
+
+**How privacy is enforced:**
+- ZK circuits (`storeDocument`, `proveKnowledge`) prove knowledge of witnesses without revealing them
+- Only `SHA-256(content)` — the `documentId` — is disclosed on-chain
+- Owner private key never leaves the wallet environment
+- Document content is a witness input, proven via ZK proofs, never exposed to the blockchain
+- Grants use composite keys (`grantKey(documentId, grantee)`) that reveal nothing about the relationship
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
@@ -71,7 +98,7 @@ Open **[http://127.0.0.1:5174](http://127.0.0.1:5174)** in Google Chrome.
 
 ---
 
-## 📜 Smart Contract (`DocStore.compact`)
+## 📄 Smart Contract (`DocStore.compact`)
 
 Written in **Compact**, Midnight's domain-specific language for Zero-Knowledge smart contracts.
 
@@ -98,4 +125,5 @@ witness ownerPrivateKey(): Bytes<32>;
 ---
 
 ## 📄 License
+
 Apache-2.0
